@@ -35,19 +35,24 @@ void* sendT(void* c){
 void* receive(void* c){
     struct client client= *(struct client*)c;
     //int client = (struct client)c->socket;
-    int f =1;
-    
+    int f ;
+     printf("[%s]: e' entrato nella chatroom!!\n",client.name);
         char server_response[256] ;
-	    while(f =recv(client.socket,&server_response,sizeof(server_response),0)>0){
-            printf("%d %s",f,server_response);
+	    while(1){
+            if(f =recv(client.socket,&server_response,sizeof(server_response),0)>0)
+                 printf("[%s]: %s",client.name,server_response);
+           // printf("%d %s",f,server_response);
             if(f==-1)
                 perror("errore di ricezione");
-            printf("[%s]: %s",client.name,server_response);
+            if(strcmp(server_response,"/quit\n")==0 || f==0)
+              break;
+           
                 
                 // fflush(stdout);
         }
-       printf("%s ha lasciato la stanza\n",client.name);
+      
        close(client.socket);
+       printf("%s ha lasciato la stanza\n",client.name);
     
 
 }
@@ -63,7 +68,7 @@ int main(int argc, char* argv[]){
     //Struttura del socket
     struct sockaddr_in server_address;
     server_address.sin_family = AF_INET;
-    server_address.sin_port = htons(10010);
+    server_address.sin_port = htons(10030);
     server_address.sin_addr.s_addr =INADDR_ANY;
     
     //bind socket con struttura e gestion errore
@@ -90,11 +95,8 @@ int main(int argc, char* argv[]){
         if(recv(client.socket,&client.name,sizeof(client.name),0)<0)
             perror("dati non ricevuti");
             
-            
-       // fflush(stdout);
        
         pthread_t tid;
-       // pthread_create(&tid,NULL,sendT,&client);
         pthread_create(&tid,NULL,receive,&client);
     }
 
