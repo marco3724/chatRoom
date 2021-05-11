@@ -31,19 +31,25 @@ int main(int argc,char* argv[]){
 	//ricezione
 	char server_response[SIZE];
 	int f = 0;
-	f = recv(client,&server_response,sizeof(server_response),0);
-		if(f==-1)
+	if(recv(client,&server_response,sizeof(server_response),0)<0)
+	
 			perror("messaggio non ricevutop");
-		printf("server :%s ",server_response);
-		printf("%d\n",f);
+	printf("server :%s ",server_response);
+	fflush(stdout);
+	char c[256];
+	scanf("%s",&c);
+    if(send(client,c ,strlen(c),0)==-1)
+		 perror("messaggio non inviato");
+		
 		
 	
     //invio
 	while(1){
-		char c[256];
-	    //printf("inserisci un messaggio\n");  
-       fgets(c,256,stdin);
-        if(send(client,c ,256,0)==-1)
+		char msg[256];
+	    printf("inserisci un messaggio\n");  
+	   //fflush(stdout);
+       fgets(msg,256,stdin);
+        if(send(client,msg ,256,0)==-1)
             perror("messaggio non inviato");
 		//printf("messaggio inviato\n");
 	}

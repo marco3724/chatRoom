@@ -3,12 +3,18 @@
 #include <unistd.h>
 
 #include <netinet/in.h>
-
+#include <string.h>
 
 #include <pthread.h>
 #include <errno.h>
 #define CLIENT 5
-#define WELCOME "Benvenuto/a nella chatroom"
+#define WELCOME "Benvenuto/a nella chatroom, inserisci il tuo nome: "
+
+struct client{
+    char name[256];
+    int socket;
+};
+
 
 void* sendT(void* c){
 
@@ -27,17 +33,21 @@ void* sendT(void* c){
 
 
 void* receive(void* c){
-    int client = *(int*)c;
+    struct client client= *(struct client*)c;
+    //int client = (struct client)c->socket;
     int f =1;
     
-        char server_response[256];
-	    while(f =recv(client,&server_response,sizeof(server_response),0)>0){
-                 printf("%s %d ",server_response,f);
-                 printf(" PROVA \n");
+        char server_response[256] ;
+	    while(f =recv(client.socket,&server_response,sizeof(server_response),0)>0){
+            printf("%d %s",f,server_response);
+            if(f==-1)
+                perror("errore di ricezione");
+            printf("[%s]: %s",client.name,server_response);
+                
                 // fflush(stdout);
         }
-       printf("chiusura client %d\n",f);
-       close(client);
+       printf("%s ha lasciato la stanza\n",client.name);
+       close(client.socket);
     
 
 }
@@ -53,7 +63,7 @@ int main(int argc, char* argv[]){
     //Struttura del socket
     struct sockaddr_in server_address;
     server_address.sin_family = AF_INET;
-    server_address.sin_port = htons(10040);
+    server_address.sin_port = htons(10010);
     server_address.sin_addr.s_addr =INADDR_ANY;
     
     //bind socket con struttura e gestion errore
@@ -68,15 +78,21 @@ int main(int argc, char* argv[]){
     //accettazione connessioni
     while(1){
 
-        int client;
+        struct client client;
         struct sockaddr_in client_address;
         int len =sizeof(client_address);
-
-        printf("waiting...\n");
-	    client = accept(server,(struct sockaddr *)&client_address,&len); 
-        if(send(client,WELCOME,sizeof(WELCOME),0)==-1)
+     
+        printf("waiting clients...\n");
+	    client.socket = accept(server,(struct sockaddr *)&client_address,&len); 
+        if(send(client.socket,WELCOME,sizeof(WELCOME),0)==-1)
             perror("messaggio non inviato");
+       memset(&client.name, 0, sizeof(client.name));
+        if(recv(client.socket,&client.name,sizeof(client.name),0)<0)
+            perror("dati non ricevuti");
+            
+            
        // fflush(stdout);
+       
         pthread_t tid;
        // pthread_create(&tid,NULL,sendT,&client);
         pthread_create(&tid,NULL,receive,&client);
