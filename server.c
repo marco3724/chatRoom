@@ -1,12 +1,46 @@
 #include <stdio.h>
 #include <sys/socket.h>
-
+#include <unistd.h>
 
 #include <netinet/in.h>
 
+
+#include <pthread.h>
 #include <errno.h>
 #define CLIENT 5
 #define WELCOME "Benvenuto/a nella chatroom"
+
+void* sendT(void* c){
+
+    int client = *(int*)c;
+
+    while(1){  
+
+        char msg[256];
+        printf("inserisci un messaggio\n");  
+        scanf("%s",&msg);
+
+        if(send(client,msg,sizeof(msg),0)==-1)
+            perror("messaggio non inviato");
+    }
+}
+
+
+void* receive(void* c){
+    int client = *(int*)c;
+    int f =1;
+    
+        char server_response[256];
+	    while(f =recv(client,&server_response,sizeof(server_response),0)>0){
+                 printf("%s %d ",server_response,f);
+                 printf(" PROVA \n");
+                // fflush(stdout);
+        }
+       printf("chiusura client %d\n",f);
+       close(client);
+    
+
+}
 
 
 int main(int argc, char* argv[]){
@@ -19,7 +53,7 @@ int main(int argc, char* argv[]){
     //Struttura del socket
     struct sockaddr_in server_address;
     server_address.sin_family = AF_INET;
-    server_address.sin_port = htons(10010);
+    server_address.sin_port = htons(10040);
     server_address.sin_addr.s_addr =INADDR_ANY;
     
     //bind socket con struttura e gestion errore
@@ -32,27 +66,20 @@ int main(int argc, char* argv[]){
    
 
     //accettazione connessioni
-  //  while(1){
+    while(1){
 
         int client;
         struct sockaddr_in client_address;
         int len =sizeof(client_address);
 
-        //printf('waiting...');
+        printf("waiting...\n");
 	    client = accept(server,(struct sockaddr *)&client_address,&len); 
-    while(1){  
-        char c[256];
-        printf("inserisci un messaggio\n");  
-        scanf("%s",&c);
-        if(send(client,c ,sizeof(c),0)==-1)
+        if(send(client,WELCOME,sizeof(WELCOME),0)==-1)
             perror("messaggio non inviato");
-        
-        char server_response[256];
-	    if(recv(client,&server_response,sizeof(server_response),MSG_WAITALL)==-1)
-            perror("ricezione non riuscito");
-        printf("%s\n",server_response);
-
-
+       // fflush(stdout);
+        pthread_t tid;
+       // pthread_create(&tid,NULL,sendT,&client);
+        pthread_create(&tid,NULL,receive,&client);
     }
 
 
