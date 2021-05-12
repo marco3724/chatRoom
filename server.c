@@ -8,7 +8,7 @@
 #include <pthread.h>
 #include <errno.h>
 #define CLIENT 5
-#define WELCOME "Benvenuto/a nella chatroom, inserisci il tuo nome: "
+#define WELCOME "=====Benvenuto/a nella chatroom=====\ninserisci il tuo nome: "
 
 struct client{
     char name[256];
@@ -44,7 +44,7 @@ void* receive(void* c){
            // printf("%d %s",f,server_response);
             if(f==-1)
                 perror("errore di ricezione");
-            if(strcmp(server_response,"/quit\n")==0 || f==0)
+            if(f==0)
               break;
            
                 
@@ -91,7 +91,7 @@ int main(int argc, char* argv[]){
 	    client.socket = accept(server,(struct sockaddr *)&client_address,&len); 
         if(send(client.socket,WELCOME,sizeof(WELCOME),0)==-1)
             perror("messaggio non inviato");
-       memset(&client.name, 0, sizeof(client.name));
+        memset(&client.name, 0, sizeof(client.name));
         if(recv(client.socket,&client.name,sizeof(client.name),0)<0)
             perror("dati non ricevuti");
             
