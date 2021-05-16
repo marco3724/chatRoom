@@ -30,10 +30,24 @@ pthread_mutex_t mutexLog; //lock per accedere al file di log
 FILE *fdLog; //file di log dei messaggi
 
 
-void sendtoAll(){
-    struct client *node = &root;
-  while(node !=NULL){
-        printf("client:%p    %p    %p    %d    %s\n",node->prev,node,node->next,node->socket,node->name);
+void sendtoAll(void *c,void *m){
+    struct client *client = (struct client*)c;
+    char *msg = (char*)m;
+  struct client *node = root.next;
+  char fullMsg[256];
+  sprintf(fullMsg,"[%s]: %s",client->name,msg);
+  printf("%s",msg);
+  while(node->next !=NULL){
+     // printf("CLIENT %p %p\n",client, node);
+        if(client ==node){
+             node = node->next;
+             continue; // se node_next e' null ci sarebbe errore, quindi faccio conitnue per rifare il cpontrolllo
+        }
+        //printf("%d   %s\n",client->socket,node->name);
+        
+        if(send(node->socket,fullMsg ,256,0)==-1)
+    		perror("messaggio non inviato");
+        printf("send to CLIENT %s\n",node->name);
         node = node->next;
     }
 }
@@ -49,16 +63,18 @@ void* receive(void* c){
     if(recv(client->socket,&(client->name),sizeof(client->name),0)<0)    //ricezione nome client
         perror("dati non ricevuti");
     printf("[%s]: e' entrato nella chatroom!!\n",client->name);
- printf("PUNTATORE:%p     NOME:%s  PNOME:%p SOCK:%d\n",c,client->name,&(client->name),client->socket);
+// printf("PUNTATORE:%p     NOME:%s  PNOME:%p SOCK:%d\n",c,client->name,&(client->name),client->socket);
     char client_response[256] ;
 	while(1){
         if(flag =recv(client->socket,&client_response,sizeof(client_response),0)>0){
+             sendtoAll(client,&client_response);
             pthread_mutex_lock(&mutexLog);
             fprintf(fdLog,"[%s]: %s",client->name,client_response);
             fflush(fdLog);
             printf("[%s]: %s",client->name,client_response);
-            pthread_mutex_unlock(&mutexLog);
             
+            pthread_mutex_unlock(&mutexLog);
+           
         }
 
         if(flag==-1)//errore di ricezione
@@ -69,7 +85,7 @@ void* receive(void* c){
             
             
     }
-      sendtoAll();
+     
     close(client->socket);
     pthread_mutex_lock(&mutexLog);
     fprintf(fdLog,"%s ha lasciato la stanza\n",client->name);
@@ -89,8 +105,7 @@ void* receive(void* c){
         client->prev->next = client->next;
         client->next->prev=client->prev;
     }
-    printf("########################\n");
-    sendtoAll();
+
     free(client);
 }
 
