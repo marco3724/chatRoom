@@ -11,7 +11,7 @@
 #include <time.h>
 
 #define CLIENT 5
-#define WELCOME "=====Benvenuto/a nella chatroom=====\ninserisci il tuo nome: "
+#define WELCOME " \033[0;36m =====Benvenuto/a nella chatroom=====\n\033[0;37m inserisci il tuo nome:"
 
 
 /*struttura di un client
@@ -36,7 +36,7 @@ void sendtoAll(void *c,void *m){
   struct client *node = root.next;
   char fullMsg[256];
   sprintf(fullMsg,"[%s]: %s",client->name,msg);
-  printf("%s",msg);
+  //printf("%s",msg);
   while(node->next !=NULL){
      // printf("CLIENT %p %p\n",client, node);
         if(client ==node){
@@ -47,7 +47,7 @@ void sendtoAll(void *c,void *m){
         
         if(send(node->socket,fullMsg ,256,0)==-1)
     		perror("messaggio non inviato");
-        printf("send to CLIENT %s\n",node->name);
+        //printf("send to CLIENT %s\n",node->name);
         node = node->next;
     }
 }
@@ -62,9 +62,11 @@ void* receive(void* c){
    
     if(recv(client->socket,&(client->name),sizeof(client->name),0)<0)    //ricezione nome client
         perror("dati non ricevuti");
-    printf("[%s]: e' entrato nella chatroom!!\n",client->name);
-// printf("PUNTATORE:%p     NOME:%s  PNOME:%p SOCK:%d\n",c,client->name,&(client->name),client->socket);
     char client_response[256] ;
+    sprintf(client_response,"[%s]: e' entrato nella chatroom!!\n",client->name);
+     sendtoAll(client,&client_response);
+      printf(client_response,"[%s]: e' entrato nella chatroom!!\n",client->name);
+    
 	while(1){
         if(flag =recv(client->socket,&client_response,sizeof(client_response),0)>0){
              sendtoAll(client,&client_response);
@@ -88,10 +90,15 @@ void* receive(void* c){
      
     close(client->socket);
     pthread_mutex_lock(&mutexLog);
-    fprintf(fdLog,"%s ha lasciato la stanza\n",client->name);
+    fprintf(fdLog,"ha lasciato la stanza\n",client->name);
     fflush(fdLog);
     pthread_mutex_unlock(&mutexLog);
     printf("%s ha lasciato la stanza\n",client->name);
+    sprintf(client_response,"ha lasciato la stanza\n",client->name);
+    char red[] ="\033[0;31m";
+    char white[] = "\033[0;37m";
+   
+    sendtoAll(client, strcat(strcat(red,client_response),white));
     
     if(client->prev==&root){//vuol dire che e il primo
         client->next->prev =&root;
@@ -111,7 +118,6 @@ void* receive(void* c){
 
 
 int main(int argc, char* argv[]){
-
     if(argc<2){
         printf("porta non inserita!");
        // return -1;

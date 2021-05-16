@@ -20,9 +20,9 @@ void* receive(void* c){
 	int f = 0;
 	while(1){
 		if(recv(client,&server_response,sizeof(server_response),0)>0){
-			printf("%s",server_response);
+			printf("\r%s",server_response);
 			fflush(stdout);
-			printf("\r%s", "> ");
+			printf("\r%s", ">(io) ");
     		fflush(stdout);
 		}
 	}
@@ -31,25 +31,7 @@ void* receive(void* c){
 
 
 
-void* sendToSever(void* c){
-	int client = *(int *)c;
-	char msg[256];
-	while(1){
-		
-		//per bellezza
-		printf("\r%s", "> ");
-    	fflush(stdout);
-	  
-    	fgets(msg,SIZE,stdin);
 
-		//uscire dalla chatroom con il comando /quit
-		if(strcmp(msg,"/quit\n")==0)
-			break;
-		//inviare il messaggio
-    	if(send(client,msg ,256,0)==-1)
-    		perror("messaggio non inviato");
-	}
-}
 
 
 
@@ -93,9 +75,23 @@ int main(int argc,char* argv[]){
 	pthread_t tid;
     pthread_create(&tid,NULL,receive,&client);
     //invio
-	pthread_t tid2;
-	pthread_create(&tid2,NULL,sendToSever,&client);
-pthread_join(tid2,NULL);
+	char msg[256];
+	while(1){
+		
+		//per bellezza
+		printf("\r%s", ">(io) ");
+    	fflush(stdout);
+	  	
+    	fgets(msg,SIZE,stdin);
+	
+
+		//uscire dalla chatroom con il comando /quit
+		if(strcmp(msg,"/quit\n")==0)
+			break;
+		//inviare il messaggio
+    	if(send(client,msg ,256,0)==-1)
+    		perror("messaggio non inviato");
+	}
 	//chiusura client
 	close(client);
 	printf("sei uscito/a dalla stanza\n");
