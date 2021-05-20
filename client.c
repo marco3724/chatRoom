@@ -13,7 +13,7 @@
 #include <errno.h>
 #define SIZE 256
 
-
+#define NAME_SIZE 20
 void* receive(void* c){
 	int client = *(int *)c;
 	char server_response[SIZE];
@@ -22,7 +22,7 @@ void* receive(void* c){
 		if(recv(client,&server_response,sizeof(server_response),0)>0){
 			printf("\r%s",server_response);
 			fflush(stdout);
-			printf("\r%s", ">(io) ");
+			printf("\r%s", "(io): ");
     		fflush(stdout);
 		}
 	}
@@ -64,10 +64,8 @@ int main(int argc,char* argv[]){
 	printf("%s ",server_response);
 	fflush(stdout);
 	
-	char name[SIZE];
-	char buf; //buffer(inutile) per togliere \n dallo stdin
-	scanf("%s",&name);
-	scanf("%c",&buf); //serve per togliere '\n' 
+	char name[NAME_SIZE];
+	fgets(name,NAME_SIZE,stdin);
     if(send(client,name ,strlen(name),0)==-1)
 		 perror("messaggio non inviato");
 		 
@@ -79,7 +77,7 @@ int main(int argc,char* argv[]){
 	while(1){
 		
 		//per bellezza
-		printf("\r%s", ">(io) ");
+		printf("\r%s", "(io): ");
     	fflush(stdout);
 	  	
     	fgets(msg,SIZE,stdin);
