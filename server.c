@@ -114,10 +114,7 @@ void* receive(void* c){
     
   
     sendtoAll(client, client_response);
-    if(client->next == NULL){
-        client->prev->next =NULL;
-    }
-    else if(client->prev==&root ){//vuol dire che e il primo
+   if(client->prev==&root ){//vuol dire che e il primo
         client->next->prev =&root;
         root.next = client->next;
     }//DEVO AGGIUNGERE IL FATTO CHE NEXT E' NULL IMPORTANTEEE!!!!!!!!!!!!!!!! CLIENT PREV NETX = NULL METTERLO COME PRIMA CONDIZIONE
@@ -199,15 +196,15 @@ int main(int argc, char* argv[]){
         
 
       
-   
+                node->next = client;
+        client->prev = node;
+        node = client;
+        client->next = NULL;
         
         //inizializzazione comunicazione e struttura client
         printf("waiting clients...\n");
 	    client->socket = accept(server,NULL,NULL);
-             node->next = client;
-        client->prev = node;
-        node = client;
-        client->next = NULL;
+
            
        printf("CLIENT SOCKET:%d",client->socket);
         if(send(client->socket,WELCOME,sizeof(WELCOME),0)==-1)    //messaggio di benevenuto
