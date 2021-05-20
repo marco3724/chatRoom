@@ -114,11 +114,13 @@ void* receive(void* c){
     
   
     sendtoAll(client, client_response);
-    
-    if(client->prev==&root){//vuol dire che e il primo
+    if(client->next == NULL){
+        client->prev->next =NULL;
+    }
+    else if(client->prev==&root ){//vuol dire che e il primo
         client->next->prev =&root;
         root.next = client->next;
-    }
+    }//DEVO AGGIUNGERE IL FATTO CHE NEXT E' NULL IMPORTANTEEE!!!!!!!!!!!!!!!! CLIENT PREV NETX = NULL METTERLO COME PRIMA CONDIZIONE
     else{//vuool dire che sta in mezzo
         client->prev->next = client->next;
         client->next->prev=client->prev;
@@ -188,7 +190,7 @@ int main(int argc, char* argv[]){
         perror("socket non in ascolto");
   
     
-    struct client *node;
+    struct client *node = &root;
    
     //accettazione connessioni
     while(1){
@@ -196,22 +198,17 @@ int main(int argc, char* argv[]){
         struct client *client = malloc(sizeof(struct client));
         
 
-        //costruisco una catena
-        if(root.next==NULL){//inizio della catena
-            root.next = client;
-            node = client;
-            client->prev = &root;
-        }
-        else{ //lego i nodi successivi
-            node->next = client;
-            client->prev = node;
-            node = client;
-            client->next = NULL;
-        }    
+      
+   
         
         //inizializzazione comunicazione e struttura client
         printf("waiting clients...\n");
-	    client->socket = accept(server,NULL,NULL); 
+	    client->socket = accept(server,NULL,NULL);
+             node->next = client;
+        client->prev = node;
+        node = client;
+        client->next = NULL;
+           
        printf("CLIENT SOCKET:%d",client->socket);
         if(send(client->socket,WELCOME,sizeof(WELCOME),0)==-1)    //messaggio di benevenuto
             perror("messaggio non inviato");
