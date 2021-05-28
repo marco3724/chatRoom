@@ -12,14 +12,12 @@
 #include <errno.h>
 #include <time.h>
 
+#include "utility.h"
 
- #define RED "\033[0;31m"
-   #define WHITE  "\033[0;37m"
-   #define GREEN "\033[0;36m"
 #define CLIENT 5
 #define WELCOME "\033[0;36m =====Benvenuto/a nella chatroom=====\n\033[0;37m inserisci il tuo nome(max 20 caratteri):"
 #define NAME_SIZE 20
-#define DIR "logFile"
+
 //AGGIUNGERE PORTA PREDEFINITA
 //AGGIUNGERE SIZE PREDEFINITA E NON
 
@@ -40,9 +38,8 @@ pthread_mutex_t mutexLog; //lock per accedere al file di log
 FILE *fdLog; //file di log dei messaggi
 
 
-void sendtoAll(void *c,void *m){
-    struct client *client = (struct client*)c;
-    char *msg = (char*)m;
+void sendtoAll( struct client *client,void *msg){
+    msg = (char*)msg;
     struct client *node = root.next;
 
     //manda il messaggio a tutti i nodi
@@ -57,7 +54,26 @@ void sendtoAll(void *c,void *m){
         node = node->next;
     }
 }
+void addNode(struct client *client,struct client** node){
+     printf("CLIENTE E NODE 222  %p %p\n",client,node);    
+    (*node)->next = client;
+    client->prev = (*node);
+    *node = client;
+    client->next = NULL;
+    printf("fatto NODE FUN %p\n",node);  
+}
 
+
+void removeNode(struct client *client){
+    if(client->prev==&root ){//vuol dire che e il primo
+        client->next->prev =&root;
+        root.next = client->next;
+    }
+    else{//vuool dire che sta in mezzo
+        client->prev->next = client->next;
+        client->next->prev=client->prev;
+    }
+}
 
 //ricezione di messaggi dai client
 void* receive(void* c){
@@ -114,14 +130,7 @@ void* receive(void* c){
     
   
     sendtoAll(client, client_response);
-   if(client->prev==&root ){//vuol dire che e il primo
-        client->next->prev =&root;
-        root.next = client->next;
-    }//DEVO AGGIUNGERE IL FATTO CHE NEXT E' NULL IMPORTANTEEE!!!!!!!!!!!!!!!! CLIENT PREV NETX = NULL METTERLO COME PRIMA CONDIZIONE
-    else{//vuool dire che sta in mezzo
-        client->prev->next = client->next;
-        client->next->prev=client->prev;
-    }
+   removeNode(client);
     //per come ho strutturato la creazione del client,
     // l'ultimo client della catena non puo' essere NULL ma sara sempre un client che non si e; acnora connesso
     close(client->socket);
@@ -195,11 +204,9 @@ int main(int argc, char* argv[]){
         struct client *client = malloc(sizeof(struct client));
         
 
-      
-                node->next = client;
-        client->prev = node;
-        node = client;
-        client->next = NULL;
+    //printf("CLIENTE E NODE   %p %p\n",client,node);      
+        addNode(client,&node);
+        //printf(" NODE  MAIN %p %p\n",client,node); 
         
         //inizializzazione comunicazione e struttura client
         printf("waiting clients...\n");
