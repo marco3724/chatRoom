@@ -14,66 +14,22 @@
 
 #include "utility.h"
 
-#define CLIENT 5
-#define WELCOME "\033[0;36m =====Benvenuto/a nella chatroom=====\n\033[0;37m inserisci il tuo nome(max 20 caratteri):"
-#define NAME_SIZE 20
+#include "default.h"
+#include "structClient.h"
 
 //AGGIUNGERE PORTA PREDEFINITA
 //AGGIUNGERE SIZE PREDEFINITA E NON
 
-/*struttura di un client
-contiene il suo nome e il fd del socket
-*/
-struct client{
-    char name[NAME_SIZE];
-    int socket;
-    struct client *prev;
-    struct client *next ;
-};
 
-//radice della catena dei client
-struct client root = {"root",-1,NULL,NULL};
 
 pthread_mutex_t mutexLog; //lock per accedere al file di log
 FILE *fdLog; //file di log dei messaggi
 
 
-void sendtoAll( struct client *client,void *msg){
-    msg = (char*)msg;
-    struct client *node = root.next;
-
-    //manda il messaggio a tutti i nodi
-    while(node->next !=NULL){
-        if(client ==node){
-             node = node->next;
-             continue; // se node_next e' null ci sarebbe errore, quindi faccio conitnue per rifare il cpontrolllo
-        }
-        if(send(node->socket,msg ,256,0)==-1)
-    		perror("messaggio non inviato");
-        
-        node = node->next;
-    }
-}
-void addNode(struct client *client,struct client** node){
-     printf("CLIENTE E NODE 222  %p %p\n",client,node);    
-    (*node)->next = client;
-    client->prev = (*node);
-    *node = client;
-    client->next = NULL;
-    printf("fatto NODE FUN %p\n",node);  
-}
 
 
-void removeNode(struct client *client){
-    if(client->prev==&root ){//vuol dire che e il primo
-        client->next->prev =&root;
-        root.next = client->next;
-    }
-    else{//vuool dire che sta in mezzo
-        client->prev->next = client->next;
-        client->next->prev=client->prev;
-    }
-}
+
+
 
 //ricezione di messaggi dai client
 void* receive(void* c){
@@ -204,7 +160,9 @@ int main(int argc, char* argv[]){
         struct client *client = malloc(sizeof(struct client));
         
 
-    //printf("CLIENTE E NODE   %p %p\n",client,node);      
+    //printf("CLIENTE E NODE   %p %p\n",client,node);  
+    //&node perche la variabile node deve contenere l'indirizzo di client , nel node della funzione addNode deve conenere l indirizzo di node e non l'indirizzo a cui punta node
+    //la variabile cliente deve rimanere uguale sto solo cambiando i membri di client  
         addNode(client,&node);
         //printf(" NODE  MAIN %p %p\n",client,node); 
         
