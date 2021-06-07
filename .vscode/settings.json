@@ -1,0 +1,26 @@
+{
+    "files.associations": {
+        "in.h": "c",
+        "types.h": "c",
+        "functional": "cpp",
+        "istream": "cpp",
+        "ostream": "cpp",
+        "utility": "cpp",
+        "*.tcc": "c",
+        "exception": "c",
+        "fstream": "c",
+        "iosfwd": "c",
+        "new": "c",
+        "sstream": "c",
+        "streambuf": "c",
+        "socket.h": "c",
+        "string.h": "c",
+        "cerrno": "c",
+        "stat.h": "c",
+        "unistd.h": "c",
+        "structclient.h": "c",
+        "default.h": "c",
+        "typeinfo": "c",
+        "stdio.h": "c"
+    }
+}

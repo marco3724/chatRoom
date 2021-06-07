@@ -2,7 +2,7 @@
 #include <stdlib.h>
 #include <sys/socket.h>
 #include <unistd.h>
-#include <sys/stat.h>
+
 
 
 #include <netinet/in.h>
@@ -12,23 +12,16 @@
 #include <errno.h>
 #include <time.h>
 
-#include "utility.h"
-
 #include "default.h"
 #include "structClient.h"
 
-//AGGIUNGERE PORTA PREDEFINITA
-//AGGIUNGERE SIZE PREDEFINITA E NON
-
-
 
 pthread_mutex_t mutexLog; //lock per accedere al file di log
-FILE *fdLog; //file di log dei messaggi
+FILE *serverLog; //file di log dei messaggi
+int mode = 0;
 
-
-
-
-
+//il path per raggiungere i log dei client cartellaPrincipale/data/cartellaclients
+char filePath[SIZE_DIR_CLIENTS]; 
 
 
 //ricezione di messaggi dai client
@@ -40,32 +33,37 @@ void* receive(void* c){
    
     if(recv(client->socket,&(client->name),sizeof(client->name),0)<0)    //ricezione nome client
         perror("dati non ricevuti");
-    if (client->name[strlen(client->name)-1] == '\n') {
+    char clientFileName[SIZE_DIR_CLIENTS+sizeof(client->name)+10];
+
+    if (client->name[strlen(client->name)-1] == '\n') //formattazione
            client->name[strlen(client->name)-1] = '\0';
-        }
-    char client_response[256] ;
+    
+    sprintf(clientFileName,"%s/%s.txt",filePath,client->name);
+    client->log = fopen(clientFileName,"a+");
+    char client_response[MES_SIZE] ;
+
     pthread_mutex_lock(&mutexLog);
-    fprintf(fdLog,"%s e' entrato/a nella chatroom!!",client->name);
+
+    logAndPrint(client->name,JOIN_MESSAGE,GREEN,client_response,serverLog,client->log);
+    sendtoAll(client,&client_response);
+    
     pthread_mutex_unlock(&mutexLog);
 
-    sprintf(client_response,"%s%s e' entrato/a nella chatroom!!\n%s",GREEN,client->name,WHITE);
-    sendtoAll(client,&client_response);
+    char fullMsg[FULL_MEXSIZE];
+    int size = strlen(client->name)+3;
+    char formattedName[size];
+    sprintf(formattedName,"[%s]:",client->name);
 
-    printf(client_response);
-    char fullMsg[256];
 	while(1){
-        if(flag =recv(client->socket,&client_response,sizeof(client_response),0)>0){
-                
-             sprintf(fullMsg,"[%s]: %s",client->name,client_response);
-            sendtoAll(client,fullMsg);
-            
-            pthread_mutex_lock(&mutexLog);
-            fprintf(fdLog,"%s",fullMsg);
-            fflush(fdLog);
-            pthread_mutex_unlock(&mutexLog);
+        if((flag =recv(client->socket,&client_response,sizeof(client_response),0))>0){
 
-            printf("%s",fullMsg);
-           
+            pthread_mutex_lock(&mutexLog);
+            
+            logAndPrint(formattedName,client_response,WHITE,fullMsg,serverLog,client->log);
+            sendtoAll(client,fullMsg);
+    
+            pthread_mutex_unlock(&mutexLog);
+ 
         }
 
         if(flag==-1)//errore di ricezione
@@ -77,57 +75,40 @@ void* receive(void* c){
      
     
     pthread_mutex_lock(&mutexLog);
-    fprintf(fdLog,"%s ha lasciato la stanza\n",client->name);
-    fflush(fdLog);
+
+    logAndPrint(client->name,EXIT_MESSAGE,RED,client_response,serverLog,client->log);
+    sendtoAll(client, client_response);
+    removeNode(client);
+
     pthread_mutex_unlock(&mutexLog);
 
-    printf("%s%s ha lasciato la stanza\n%s",RED,client->name,WHITE);
-    sprintf(client_response,"%s%s ha lasciato la stanza%s\n",RED,client->name,WHITE);
     
-  
-    sendtoAll(client, client_response);
-   removeNode(client);
-    //per come ho strutturato la creazione del client,
-    // l'ultimo client della catena non puo' essere NULL ma sara sempre un client che non si e; acnora connesso
     close(client->socket);
     free(client);
+    return 0;
 }
 
 
 int main(int argc, char* argv[]){
-    if(argc<2){
-        printf("porta non inserita!");
-       // return -1;
-    }
 
+    int port = returnPort(argc,argv);
     //inizializzazione mutex per il file di log  
-
-    int counter =0;
-    
-
-
 
     pthread_mutex_init(&mutexLog,NULL);
    
-    if(mkdir(DIR,S_IWOTH)==-1 )
-        perror("errore creazione cartella");
-
-
-
-
+  
 
     //tempo e inzializzazione file di log
-    time_t rawtime;
-    struct tm *info;
-    time( &rawtime );
-    info = localtime( &rawtime );
-    char stringa[14];
-    sprintf(stringa,"./%s/%d-%d-%d.txt",DIR,info->tm_year-100,info->tm_mon,info->tm_mday);//un file per giorno
-    fdLog = fopen(stringa,"a+");
-    if(fdLog==NULL)
+    struct tm *info = getCurrentTime();
+
+    //crea 2 cartelle : la cartella logFile e all interno un altra cartella client
+    serverLog = folderSettings(filePath,info);
+    if(serverLog==NULL)
         perror("file non aperto/creato");
-    fprintf(fdLog,"\nsessione: %s\n",asctime(info));
-    printf("Current local tim and date: %s", asctime(info));
+
+    fprintf(serverLog,"\nsessione: %s\n",asctime(info));
+    fflush(serverLog);
+    //printf("Current local tim and date: %s", asctime(info));
 
     //creazione socket e gestione errore
     int server;
@@ -136,10 +117,11 @@ int main(int argc, char* argv[]){
     if(server==-1)
         perror("socket non creato\n");
 
+    
     //Struttura del socket
     struct sockaddr_in server_address;
     server_address.sin_family = AF_INET;
-    server_address.sin_port = htons(atoi(argv[1]));
+    server_address.sin_port = htons(port);
     server_address.sin_addr.s_addr =INADDR_ANY;
     
     //bind socket con struttura e gestion errore
@@ -157,21 +139,16 @@ int main(int argc, char* argv[]){
     //accettazione connessioni
     while(1){
         //struttura socket dei client
-        struct client *client = malloc(sizeof(struct client));
+         struct client *client = malloc(sizeof(struct client));
         
+        //aggiunge il client appena creato alla catena e setta node = client
+         addNode(client,&node);
 
-    //printf("CLIENTE E NODE   %p %p\n",client,node);  
-    //&node perche la variabile node deve contenere l'indirizzo di client , nel node della funzione addNode deve conenere l indirizzo di node e non l'indirizzo a cui punta node
-    //la variabile cliente deve rimanere uguale sto solo cambiando i membri di client  
-        addNode(client,&node);
-        //printf(" NODE  MAIN %p %p\n",client,node); 
         
         //inizializzazione comunicazione e struttura client
-        printf("waiting clients...\n");
-	    client->socket = accept(server,NULL,NULL);
+         printf("waiting clients...\n");
+	     client->socket = accept(server,NULL,NULL);
 
-           
-       printf("CLIENT SOCKET:%d",client->socket);
         if(send(client->socket,WELCOME,sizeof(WELCOME),0)==-1)    //messaggio di benevenuto
             perror("messaggio non inviato");
 
@@ -179,9 +156,9 @@ int main(int argc, char* argv[]){
         pthread_t tid;
         pthread_create(&tid,NULL,receive,client);
     }
-    fclose(fdLog);
-    pthread_mutex_destroy(&mutexLog);
+    fclose(serverLog);
+    pthread_mutex_destroy(&mutexLog); 
+    free(filePath);
     printf("file chiuso");
-
 
 }
