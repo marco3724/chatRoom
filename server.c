@@ -35,11 +35,10 @@ void* receive(void* c){
         perror("dati non ricevuti");
     char clientFileName[SIZE_DIR_CLIENTS+sizeof(client->name)+10];
 
-    if (client->name[strlen(client->name)-1] == '\n') //formattazione
-           client->name[strlen(client->name)-1] = '\0';
     
     sprintf(clientFileName,"%s/%s.txt",filePath,client->name);
     client->log = fopen(clientFileName,"a+");
+    
     char client_response[MES_SIZE] ;
 
     pthread_mutex_lock(&mutexLog);
@@ -160,5 +159,6 @@ int main(int argc, char* argv[]){
     pthread_mutex_destroy(&mutexLog); 
     free(filePath);
     printf("file chiuso");
+    return 0;
 
 }

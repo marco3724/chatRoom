@@ -11,10 +11,10 @@ void sendtoAll( struct client *client,void *msg){
 
     //manda il messaggio a tutti i nodi
     while(node->next !=NULL){
-        if(client ==node){
-             node = node->next;
-             continue; // se node_next e' null ci sarebbe errore, quindi faccio conitnue per rifare il cpontrolllo
-        }
+        //if(client ==node){
+           //  node = node->next;
+             //continue; // se node_next e' null ci sarebbe errore, quindi faccio conitnue per rifare il cpontrolllo
+       // }
         if(send(node->socket,message ,256,0)==-1)
     		perror("messaggio non inviato");
         

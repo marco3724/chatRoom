@@ -14,10 +14,12 @@
 #define SIZE 256
 
 #define NAME_SIZE 20
+
+
 void* receive(void* c){
 	int client = *(int *)c;
 	char server_response[SIZE];
-	int f = 0;
+	
 	while(1){
 		if(recv(client,&server_response,sizeof(server_response),0)>0){
 			printf("\r%s",server_response);
@@ -58,7 +60,7 @@ int main(int argc,char* argv[]){
 	
 	//ricezione
 	char server_response[SIZE];
-	int f = 0;
+	
 	if(recv(client,&server_response,sizeof(server_response),0)<0)
 		perror("messaggio non ricevuto");
 	printf("%s ",server_response);
@@ -66,6 +68,10 @@ int main(int argc,char* argv[]){
 	
 	char name[NAME_SIZE];
 	fgets(name,NAME_SIZE,stdin);
+	
+    if (name[strlen(name)-1] == '\n') //formattazione
+           name[strlen(name)-1] = '\0';
+
     if(send(client,name ,strlen(name),0)==-1)
 		 perror("messaggio non inviato");
 		 
@@ -73,7 +79,7 @@ int main(int argc,char* argv[]){
 	pthread_t tid;
     pthread_create(&tid,NULL,receive,&client);
     //invio
-	char msg[256];
+	char msg[SIZE];
 	while(1){
 		
 		//per bellezza
@@ -81,13 +87,16 @@ int main(int argc,char* argv[]){
     	fflush(stdout);
 	  	
     	fgets(msg,SIZE,stdin);
+		
+		printf("\033[A\33[2K");
+		fflush(stdout);
 	
 
 		//uscire dalla chatroom con il comando /quit
 		if(strcmp(msg,"/quit\n")==0)
 			break;
 		//inviare il messaggio
-    	if(send(client,msg ,256,0)==-1)
+    	if(send(client,msg ,SIZE,0)==-1)
     		perror("messaggio non inviato");
 	}
 	//chiusura client
