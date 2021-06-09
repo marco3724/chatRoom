@@ -11,14 +11,12 @@
 
 #include <pthread.h>
 #include <errno.h>
-#define SIZE 256
-
-#define NAME_SIZE 20
+#include "defaultClient.h"
 
 
 void* receive(void* c){
 	int client = *(int *)c;
-	char server_response[SIZE];
+	char server_response[MES_SIZE];
 	
 	while(1){
 		if(recv(client,&server_response,sizeof(server_response),0)>0){
@@ -59,7 +57,7 @@ int main(int argc,char* argv[]){
 	
 	
 	//ricezione
-	char server_response[SIZE];
+	char server_response[MES_SIZE];
 	
 	if(recv(client,&server_response,sizeof(server_response),0)<0)
 		perror("messaggio non ricevuto");
@@ -79,14 +77,14 @@ int main(int argc,char* argv[]){
 	pthread_t tid;
     pthread_create(&tid,NULL,receive,&client);
     //invio
-	char msg[SIZE];
+	char msg[MES_SIZE];
 	while(1){
 		
 		//per bellezza
 		printf("\r%s", "(io): ");
     	fflush(stdout);
 	  	
-    	fgets(msg,SIZE,stdin);
+    	fgets(msg,MES_SIZE,stdin);
 		
 		printf("\033[A\33[2K");
 		fflush(stdout);
@@ -96,7 +94,7 @@ int main(int argc,char* argv[]){
 		if(strcmp(msg,"/quit\n")==0)
 			break;
 		//inviare il messaggio
-    	if(send(client,msg ,SIZE,0)==-1)
+    	if(send(client,msg ,MES_SIZE,0)==-1)
     		perror("messaggio non inviato");
 	}
 	//chiusura client

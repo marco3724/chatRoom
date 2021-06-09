@@ -21,6 +21,9 @@
         "structclient.h": "c",
         "default.h": "c",
         "typeinfo": "c",
-        "stdio.h": "c"
+        "stdio.h": "c",
+        "clientdefault.h": "c",
+        "defaultclient.h": "c",
+        "structqueue.h": "c"
     }
 }

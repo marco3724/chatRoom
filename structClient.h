@@ -1,6 +1,6 @@
 #ifndef STRUCTCLIENT_H
 #define STRUCTCLIENT_H
-#include "default.h"
+#include "defaultServer.h"
 
 
 /*struttura di un client

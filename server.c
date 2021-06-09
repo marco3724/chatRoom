@@ -12,13 +12,17 @@
 #include <errno.h>
 #include <time.h>
 
-#include "default.h"
+#include "defaultServer.h"
 #include "structClient.h"
+#include "structQueue.h"
 
 
 pthread_mutex_t mutexLog; //lock per accedere al file di log
 FILE *serverLog; //file di log dei messaggi
 int mode = 0;
+
+
+
 
 //il path per raggiungere i log dei client cartellaPrincipale/data/cartellaclients
 char filePath[SIZE_DIR_CLIENTS]; 
@@ -31,14 +35,17 @@ void* receive(void* c){
     int flag ;   // per gestire gli eventuali errori della ricezione
     memset(&(client->name), 0, sizeof(client->name));
    
-    if(recv(client->socket,&(client->name),sizeof(client->name),0)<0)    //ricezione nome client
-        perror("dati non ricevuti");
-    char clientFileName[SIZE_DIR_CLIENTS+sizeof(client->name)+10];
-
+    if(recv(client->socket,&(client->name),sizeof(client->name),0)<=0){    //ricezione nome client
+        perror("nome non ricevuto, disconessione");
+        close(client->socket);
+        removeNode(client);
+        free(client);
+        return 0;
+        }
     
+    char clientFileName[SIZE_DIR_CLIENTS+sizeof(client->name)+DATA_SIZE];
     sprintf(clientFileName,"%s/%s.txt",filePath,client->name);
     client->log = fopen(clientFileName,"a+");
-    
     char client_response[MES_SIZE] ;
 
     pthread_mutex_lock(&mutexLog);
@@ -73,20 +80,21 @@ void* receive(void* c){
     }
      
     
+    
     pthread_mutex_lock(&mutexLog);
 
     logAndPrint(client->name,EXIT_MESSAGE,RED,client_response,serverLog,client->log);
     sendtoAll(client, client_response);
-    removeNode(client);
-
-    pthread_mutex_unlock(&mutexLog);
-
-    
     close(client->socket);
+    removeNode(client);
+    pthread_mutex_unlock(&mutexLog);
+    
     free(client);
     return 0;
 }
-
+void* broadcast(){
+return 0;
+}
 
 int main(int argc, char* argv[]){
 
@@ -132,7 +140,12 @@ int main(int argc, char* argv[]){
     if(listen(server,CLIENT)==-1)
         perror("socket non in ascolto");
   
-    
+    struct coda *queue = malloc(sizeof(struct coda));
+    initQueue(queue);
+    printf("%d",queue->start);
+
+
+
     struct client *node = &root;
    
     //accettazione connessioni
@@ -158,6 +171,10 @@ int main(int argc, char* argv[]){
     fclose(serverLog);
     pthread_mutex_destroy(&mutexLog); 
     free(filePath);
+    free(node);
+    free(info);
+    free(&server_address);
+    
     printf("file chiuso");
     return 0;
 
