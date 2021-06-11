@@ -3,8 +3,6 @@
 #include <sys/socket.h>
 #include <unistd.h>
 
-
-
 #include <netinet/in.h>
 #include <string.h>
 
@@ -41,12 +39,12 @@ void* receive(void* c){
         removeNode(client);
         free(client);
         return 0;
-        }
+    }
     
     char clientFileName[SIZE_DIR_CLIENTS+sizeof(client->name)+DATA_SIZE];
     sprintf(clientFileName,"%s/%s.txt",filePath,client->name);
     client->log = fopen(clientFileName,"a+");
-    char client_response[MES_SIZE] ;
+    char client_response[MES_SIZE+DATA_SIZE+PADDING] ;
 
     pthread_mutex_lock(&mutexLog);
 
@@ -60,12 +58,19 @@ void* receive(void* c){
     char formattedName[size];
     sprintf(formattedName,"[%s]:",client->name);
 
+
+    char infoDate[DATA_SIZE];
+    char msg[sizeof(client_response)];
+    
 	while(1){
+    
         if((flag =recv(client->socket,&client_response,sizeof(client_response),0))>0){
+           unpack(infoDate,msg,client_response);
+       printf("%s",infoDate);
 
             pthread_mutex_lock(&mutexLog);
             
-            logAndPrint(formattedName,client_response,WHITE,fullMsg,serverLog,client->log);
+            logAndPrint(formattedName,msg,WHITE,fullMsg,serverLog,client->log);
             sendtoAll(client,fullMsg);
     
             pthread_mutex_unlock(&mutexLog);
@@ -78,8 +83,6 @@ void* receive(void* c){
         if(flag==0)//client disconesso   
             break;     
     }
-     
-    
     
     pthread_mutex_lock(&mutexLog);
 
@@ -108,7 +111,7 @@ int main(int argc, char* argv[]){
     //tempo e inzializzazione file di log
     struct tm *info = getCurrentTime();
 
-    //crea 2 cartelle : la cartella logFile e all interno un altra cartella client
+    //crea 2 cartelle : la cartella logFile e all interno un altra cartella client e restituisce il puntatore al file di log del server
     serverLog = folderSettings(filePath,info);
     if(serverLog==NULL)
         perror("file non aperto/creato");
@@ -142,7 +145,7 @@ int main(int argc, char* argv[]){
   
     struct coda *queue = malloc(sizeof(struct coda));
     initQueue(queue);
-    printf("%d",queue->start);
+   
 
 
 
@@ -173,6 +176,7 @@ int main(int argc, char* argv[]){
     free(filePath);
     free(node);
     free(info);
+    free(queue);
     free(&server_address);
     
     printf("file chiuso");

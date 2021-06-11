@@ -24,6 +24,7 @@ void initQueue(struct coda* queue){
     //char *c = "ciao";
     queue->start = queue->end = 0;
 }
+
 void storeMessage(struct coda *queue,char* msg){
     int rEnd; //real end
     if (pthread_mutex_lock(&queue->mutex) != 0) {//blocco

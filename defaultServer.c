@@ -12,26 +12,20 @@ int returnPort(int argc,char* argv[]){
         return atoi(argv[1]);
 }
 
-struct tm * getCurrentTime(){
-    time_t rawtime;
-    time( &rawtime );
-    return  localtime( &rawtime );
-}
-
 FILE* folderSettings(char filePath[],struct tm *info){
     char cartella[strlen(DIR)+15];
     sprintf(cartella,"./%s/%d-%d-%d",DIR,info->tm_year-100,info->tm_mon+1,info->tm_mday);
 
-    if(mkdir(DIR,S_IWOTH)==-1 && errno!=EEXIST)
+    if(mkdir(DIR,S_IRWXU | S_IRWXG)==-1 && errno!=EEXIST)
         perror("errore creazione cartella");
 
-    if(mkdir(cartella,S_IWOTH)==-1 && errno!=EEXIST)
+    if(mkdir(cartella,S_IRWXU | S_IRWXG)==-1 && errno!=EEXIST)
         perror("errore creazione cartella");
 
        
     sprintf(filePath,"%s/%s",cartella,DIR_CLIENTS);
    
-    if(mkdir(filePath,S_IWOTH)==-1 && errno!=EEXIST)
+    if(mkdir(filePath,S_IRWXU | S_IRWXG)==-1 && errno!=EEXIST)
         perror("errore creazione cartella");
     
     //size del nome del file di log del server (cartellaprincipale/data(10)/server.txt)
@@ -61,8 +55,32 @@ FILE* folderSettings(char filePath[],struct tm *info){
         perror("errore scrittura log file di client\n");
     fflush(clientLog);
 
-    printf("%s%s%s",color,finalMsg,WHITE); //stampa stdout
+    //printf("%s%s%s",color,finalMsg,WHITE); //stampa stdout
 
     sprintf(client_response,"%s%s%s",color,finalMsg,WHITE); //formattazione per invio
    
  }
+
+
+ void unpack(char* infoDate,char* msg,char* client_response){
+    int totSize = MES_SIZE+DATA_SIZE+PADDING;
+    memset(msg,0,totSize);
+    memset(infoDate,0,DATA_SIZE);
+    int i;
+    int offset = client_response[0]-'0';
+    //printf("%d %s\n",offset,client_response);
+    for( i=0;i<totSize-1;i++){
+        if(i<offset)
+            infoDate[i] = client_response[i+1];
+        else
+            msg[i-offset] = client_response[i+1];
+    }
+
+       
+            
+ }
+//store
+
+//getmessage
+ //LOG AND FORMAT
+ //Send to all

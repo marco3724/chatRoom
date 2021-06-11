@@ -8,7 +8,7 @@ struct client root = {"root",-1,NULL,NULL,NULL};
 void sendtoAll( struct client *client,void *msg){
     char * message = (char*)msg;
     struct client *node = root.next;
-
+    fprintf(stdout,"%s",message);
     //manda il messaggio a tutti i nodi
     while(node->next !=NULL){
         //if(client ==node){

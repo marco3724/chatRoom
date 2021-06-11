@@ -5,7 +5,7 @@
 #include <stdio.h>
 
 //SERVER SETTINGS
-#define FULL_MEXSIZE MES_SIZE+NAME_SIZE+5
+#define FULL_MEXSIZE MES_SIZE+NAME_SIZE+DATA_SIZE+PADDING+5
 #define CLIENT 5
 
 //SERVER DEFAULT MESSAGES
@@ -24,7 +24,7 @@
 #define SERVER_LOGFILE_NAME "server.txt"
 #define DIR "logFile"
 #define DIR_CLIENTS  "clients"
-#define DATA_SIZE 10
+
 #define SIZE_DIR_CLIENTS 8+DATA_SIZE+8+5
 
 
@@ -32,6 +32,8 @@
 
 int returnPort(int,char*[]);
 
+//inserisco in msg il messaggio, l'ora in infodata da clietn response
+void unpack(char* ,char* ,char* );
 FILE* folderSettings(char[],struct tm*);
 void logAndPrint( char*,char* ,char* ,char* ,FILE *,FILE*);
 #endif
