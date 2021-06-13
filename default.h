@@ -10,4 +10,5 @@
 
 
 struct tm * getCurrentTime();
+void stringifyCurrentTime(char *dateInfo);
 #endif

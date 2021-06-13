@@ -25,6 +25,14 @@
 #define DIR "logFile"
 #define DIR_CLIENTS  "clients"
 
+struct message{
+    struct client *client;
+    char time[DATA_SIZE];
+    char txt[MES_SIZE];
+    char* color;
+};
+
+
 #define SIZE_DIR_CLIENTS 8+DATA_SIZE+8+5
 
 

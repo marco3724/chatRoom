@@ -19,13 +19,15 @@ void initQueue(struct coda* queue){
         fprintf(stderr, "Error in pthread_cond_init()\n");
         exit(EXIT_FAILURE);
     }
-    for(int i =0;i<QUEUE_SIZE;i++)
-        memset(queue->buffer[i],'\0',MES_SIZE);
+    for(int i =0;i<QUEUE_SIZE;i++){
+        memset(queue->buffer[i].txt,'\0',MES_SIZE);
+        memset(queue->buffer[i].time,'\0',DATA_SIZE);
+    }
     //char *c = "ciao";
     queue->start = queue->end = 0;
 }
 
-void storeMessage(struct coda *queue,char* msg){
+void storeMessage(struct coda *queue,char* msg,char* time, struct client* client,char* color){
     int rEnd; //real end
     if (pthread_mutex_lock(&queue->mutex) != 0) {//blocco
             perror("pthread_mutex_lock");
@@ -41,8 +43,10 @@ void storeMessage(struct coda *queue,char* msg){
         }
         rEnd = (queue->end + 1) % QUEUE_SIZE;//ricalcolo la fine
     }
-
-    strncpy(queue->buffer[queue->end],msg,MES_SIZE ); //se non e' pieno aggiungo il messaggio alla fine
+    queue->buffer[queue->end].color =color;
+    strncpy(queue->buffer[queue->end].txt,msg,MES_SIZE ); //se non e' pieno aggiungo il messaggio alla fine
+   queue->buffer[queue->end].client = client ;
+    strncpy(queue->buffer[queue->end].time,time,DATA_SIZE);
     queue->end = rEnd; //aggiorno il puintatnore che punta alla fine
 
     if (pthread_cond_signal(&queue->not_empty) != 0) {//dopo aver inserito, segnalo che non e' piu vuoto
@@ -60,7 +64,7 @@ void storeMessage(struct coda *queue,char* msg){
 
 
 
-char* getMessage(struct coda *queue) {
+struct message* getMessage(struct coda *queue) {
     if (pthread_mutex_lock(&queue->mutex) != 0) {//blocco il mutex
         perror("pthread_mutex_lock");
         exit(EXIT_FAILURE);
@@ -72,7 +76,7 @@ char* getMessage(struct coda *queue) {
         }
     }
 
-    char* msg = queue->buffer[queue->start]; //consumo il messaggio
+    struct message* msg =&( queue->buffer[queue->start]); //consumo il messaggio
     queue->start = (queue->start+1)%QUEUE_SIZE; // e incremento il contantore(rendendo invalido questo dato)
 
     if (pthread_cond_signal(&queue->not_full) != 0) { //segnalo che il buffer non e' piu pieno in quanto ho appena consumato
@@ -91,11 +95,17 @@ void sort(struct coda *queue){
 }
 /*
 int main(){
-    struct coda *q;
+    struct coda *q = malloc(sizeof(struct coda));
+    struct client *c = malloc(sizeof(struct client));
+    struct message* m;
+    sprintf(c->name,"%s","mario");
     initQueue(q);
-    for(int i = 0;i<109;i++)
-        storeMessage(q,"ciao");
-    for(int i = 0;i<20;i++)
-        printf("%s\n",getMessage(q));
+    for(int i = 0;i<18;i++)
+        storeMessage(q,"ciao","11:34:5",c);
+    for(int i = 0;i<13;i++){
+         m = getMessage(q);
+        printf("%s %s %s\n",m->client->name,m->time,m->txt);
+        }
     
-}*/
+}
+*/

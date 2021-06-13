@@ -15,7 +15,7 @@ void sendtoAll( struct client *client,void *msg){
            //  node = node->next;
              //continue; // se node_next e' null ci sarebbe errore, quindi faccio conitnue per rifare il cpontrolllo
        // }
-        if(send(node->socket,message ,256,0)==-1)
+        if(send(node->socket,message ,MES_SIZE+NAME_SIZE+DATA_SIZE+PADDING+5,0)==-1)
     		perror("messaggio non inviato");
         
         node = node->next;

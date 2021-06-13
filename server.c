@@ -18,7 +18,7 @@
 pthread_mutex_t mutexLog; //lock per accedere al file di log
 FILE *serverLog; //file di log dei messaggi
 int mode = 0;
-
+struct coda *queue;
 
 
 
@@ -29,52 +29,38 @@ char filePath[SIZE_DIR_CLIENTS];
 //ricezione di messaggi dai client
 void* receive(void* c){
     struct client *client= (struct client*)c;
-    
+    char infoDate[DATA_SIZE];
+    char clientFileName[SIZE_DIR_CLIENTS+sizeof(client->name)+DATA_SIZE];
     int flag ;   // per gestire gli eventuali errori della ricezione
+    char client_response[MES_SIZE+DATA_SIZE+PADDING] ;
+    char msg[sizeof(client_response)];
+
     memset(&(client->name), 0, sizeof(client->name));
    
     if(recv(client->socket,&(client->name),sizeof(client->name),0)<=0){    //ricezione nome client
-        perror("nome non ricevuto, disconessione");
+        perror("nome non ricevuto, disconnessione");
         close(client->socket);
         removeNode(client);
         free(client);
         return 0;
     }
     
-    char clientFileName[SIZE_DIR_CLIENTS+sizeof(client->name)+DATA_SIZE];
+   
     sprintf(clientFileName,"%s/%s.txt",filePath,client->name);
     client->log = fopen(clientFileName,"a+");
-    char client_response[MES_SIZE+DATA_SIZE+PADDING] ;
-
-    pthread_mutex_lock(&mutexLog);
-
-    logAndPrint(client->name,JOIN_MESSAGE,GREEN,client_response,serverLog,client->log);
-    sendtoAll(client,&client_response);
-    
-    pthread_mutex_unlock(&mutexLog);
-
-    char fullMsg[FULL_MEXSIZE];
-    int size = strlen(client->name)+3;
-    char formattedName[size];
-    sprintf(formattedName,"[%s]:",client->name);
+   
 
 
-    char infoDate[DATA_SIZE];
-    char msg[sizeof(client_response)];
+
+    stringifyCurrentTime(infoDate);
+    storeMessage(queue,JOIN_MESSAGE,infoDate,client,GREEN);
+
     
 	while(1){
     
         if((flag =recv(client->socket,&client_response,sizeof(client_response),0))>0){
-           unpack(infoDate,msg,client_response);
-       printf("%s",infoDate);
-
-            pthread_mutex_lock(&mutexLog);
-            
-            logAndPrint(formattedName,msg,WHITE,fullMsg,serverLog,client->log);
-            sendtoAll(client,fullMsg);
-    
-            pthread_mutex_unlock(&mutexLog);
- 
+            unpack(infoDate,msg,client_response);
+            storeMessage(queue,msg,infoDate,client,WHITE);
         }
 
         if(flag==-1)//errore di ricezione
@@ -83,30 +69,52 @@ void* receive(void* c){
         if(flag==0)//client disconesso   
             break;     
     }
-    
+    //stringifyCurrentTime(infoDate);
+   // storeMessage(queue,EXIT_MESSAGE,infoDate,client,RED);
     pthread_mutex_lock(&mutexLog);
 
     logAndPrint(client->name,EXIT_MESSAGE,RED,client_response,serverLog,client->log);
     sendtoAll(client, client_response);
     close(client->socket);
     removeNode(client);
+
     pthread_mutex_unlock(&mutexLog);
-    
+   
     free(client);
     return 0;
 }
-void* broadcast(){
-return 0;
+
+
+
+
+void* broadcast(void *n){
+struct message *msg;
+char fullMsg[FULL_MEXSIZE];
+
+  
+while(1){
+    msg = getMessage(queue);
+
+    pthread_mutex_lock(&mutexLog);
+    logAndPrint(msg->client->name,msg->txt,msg->color,fullMsg,serverLog,msg->client->log);
+    sendtoAll(msg->client,fullMsg);
+    pthread_mutex_unlock(&mutexLog);
+
 }
+
+}
+
 
 int main(int argc, char* argv[]){
 
     int port = returnPort(argc,argv);
     //inizializzazione mutex per il file di log  
-
-    pthread_mutex_init(&mutexLog,NULL);
    
-  
+    queue = malloc(sizeof(struct coda));
+    initQueue(queue);
+    pthread_mutex_init(&mutexLog,NULL);
+
+    struct client *node = &root;
 
     //tempo e inzializzazione file di log
     struct tm *info = getCurrentTime();
@@ -143,13 +151,13 @@ int main(int argc, char* argv[]){
     if(listen(server,CLIENT)==-1)
         perror("socket non in ascolto");
   
-    struct coda *queue = malloc(sizeof(struct coda));
-    initQueue(queue);
+    
    
 
+    pthread_t sendTid;
+    pthread_create(&sendTid,NULL,broadcast,NULL);
 
-
-    struct client *node = &root;
+   
    
     //accettazione connessioni
     while(1){
@@ -168,8 +176,8 @@ int main(int argc, char* argv[]){
             perror("messaggio non inviato");
 
         //thread per la gestione delle ricezione dei client
-        pthread_t tid;
-        pthread_create(&tid,NULL,receive,client);
+        pthread_t receiveTid;
+        pthread_create(&receiveTid,NULL,receive,client);
     }
     fclose(serverLog);
     pthread_mutex_destroy(&mutexLog); 

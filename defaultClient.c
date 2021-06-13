@@ -10,7 +10,7 @@
     
  void startCommunication(int client){   
     char server_response[MES_SIZE];
-	
+	memset(server_response,0,sizeof(server_response));
 	if(recv(client,&server_response,sizeof(server_response),0)<0)
 		perror("messaggio non ricevuto");
 	printf("%s ",server_response);

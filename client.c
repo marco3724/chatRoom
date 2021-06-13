@@ -13,10 +13,9 @@
 #include <errno.h>
 #include "defaultClient.h"
 
-
 void* receive(void* c){
 	int client = *(int *)c;
-	char server_response[MES_SIZE];
+	char server_response[MES_SIZE+NAME_SIZE+DATA_SIZE+PADDING+5];
 	
 	while(1){
 		if(recv(client,&server_response,sizeof(server_response),0)>0){
@@ -57,7 +56,7 @@ int main(int argc,char* argv[]){
 	
 	
 	//ricezione
-	char server_response[MES_SIZE];
+	//char server_response[MES_SIZE];
 	//printf("%s",asctime(getCurrentTime()));
 //	struct tm* info = getCurrentTime();
 	//char time[10];
@@ -67,20 +66,7 @@ int main(int argc,char* argv[]){
 
 
 
-
-	if(recv(client,&server_response,sizeof(server_response),0)<0)
-		perror("messaggio non ricevuto");
-	printf("%s ",server_response);
-	fflush(stdout);
-
-	char name[NAME_SIZE];
-	fgets(name,NAME_SIZE,stdin);
-	
-    if (name[strlen(name)-1] == '\n') //formattazione
-           name[strlen(name)-1] = '\0';
-
-    if(send(client,name ,strlen(name),0)==-1)
-		 perror("messaggio non inviato");
+startCommunication(client);
 		 
 		
 	pthread_t tid;
@@ -104,7 +90,7 @@ int main(int argc,char* argv[]){
 		//uscire dalla chatroom con il comando /quit
 		if(strcmp(msg,"/quit\n")==0)
 			break;
-pack(fullMsg,msg);
+		pack(fullMsg,msg);
 		//char dateInfo[DATA_SIZE];
 		//memset(dateInfo,'\0',sizeof(dateInfo));
 		//sprintf(dateInfo,"%d:%d:%d",info->tm_hour,info->tm_min,info->tm_sec);

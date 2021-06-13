@@ -39,23 +39,25 @@ FILE* folderSettings(char filePath[],struct tm *info){
 
 
  void logAndPrint(char* name,char* message,char* color,char* client_response,FILE *serverLog,FILE *clientLog){
-   int size = strlen(name)+strlen(message)+2;
-   char finalMsg[size];
-
-   if(message[strlen(message)-1]== '\n')
+    int size =NAME_SIZE+3+strlen(message)+2;
+    char formattedName[NAME_SIZE+3] ;
+    char finalMsg[size];
+    if(strcmp(color,WHITE)==0)
+        sprintf(formattedName,"[%s]:",name);
+    else
+        sprintf(formattedName,"%s",name);
+    if(message[strlen(message)-1]== '\n')
         message[strlen(message)-1] = '\0';
 
-   sprintf(finalMsg,"%s %s\n",name,message);
+    sprintf(finalMsg,"%s %s\n",formattedName,message);
 
-   if(fprintf(serverLog,"%s",finalMsg)<0)//scrittura sul file di log server
+    if(fprintf(serverLog,"%s",finalMsg)<0)//scrittura sul file di log server
         perror("errore scrittura log file di server\n");
     fflush(serverLog);
 
     if(fprintf(clientLog,"%s",finalMsg)<0)//scrittura sul file ddi log client
         perror("errore scrittura log file di client\n");
     fflush(clientLog);
-
-    //printf("%s%s%s",color,finalMsg,WHITE); //stampa stdout
 
     sprintf(client_response,"%s%s%s",color,finalMsg,WHITE); //formattazione per invio
    
@@ -68,7 +70,7 @@ FILE* folderSettings(char filePath[],struct tm *info){
     memset(infoDate,0,DATA_SIZE);
     int i;
     int offset = client_response[0]-'0';
-    //printf("%d %s\n",offset,client_response);
+    
     for( i=0;i<totSize-1;i++){
         if(i<offset)
             infoDate[i] = client_response[i+1];
