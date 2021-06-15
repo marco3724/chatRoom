@@ -25,6 +25,7 @@
         "clientdefault.h": "c",
         "defaultclient.h": "c",
         "structqueue.h": "c",
-        "errno.h": "c"
+        "errno.h": "c",
+        "stdlib.h": "c"
     }
 }
