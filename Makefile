@@ -1,19 +1,30 @@
 CC=gcc
 CFLAGS=  -Wall
+SRC =src/
+CLT =$(SRC)client/
+SRV = $(SRC)server/
 
 
 all: client server
 
-client: client.o defaultClient.o default.o
-	$(CC) $(CFLAGS) -pthread client.o defaultClient.o default.o -o client
+client: $(CLT)client.o $(CLT)defaultClient.o $(SRC)default.o
+	$(CC) $(CFLAGS) -pthread $(CLT)client.o $(CLT)defaultClient.o $(SRC)default.o -o client
 
-server: server.o defaultServer.o structClient.o structQueue.o default.o
-	$(CC) $(CFLAGS) -pthread server.o defaultServer.o structClient.o structQueue.o default.o -o server
+server: $(SRV)server.o $(SRV)defaultServer.o $(SRV)structClient.o $(SRV)structQueue.o $(SRC)default.o
+	$(CC) $(CFLAGS) -pthread $(SRV)server.o $(SRV)defaultServer.o $(SRV)structClient.o $(SRV)structQueue.o $(SRC)default.o -o server
 
-%.o: %.c
+$(SRV)%.o: $(SRV)%.c
 	$(CC) $(CFLAGS) -c $< -o $@
+
+$(CLT)%.o: $(CLT)%.c
+	$(CC) $(CFLAGS) -c $< -o $@
+
+$(SRC)%.o: $(SRC)%.c
+	$(CC) $(CFLAGS) -c $< -o $@
+
+
 
 .PHONY: clean
 
 clean:
-	rm -f *.o 
+	rm -f $(SRC)*.o $(SRV)*.o $(CLT)*.o
