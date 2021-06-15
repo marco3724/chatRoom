@@ -81,7 +81,7 @@ startCommunication(client);
     	fflush(stdout);
 	  	
     	fgets(msg,MES_SIZE,stdin);
-		//info = getCurrentTime();
+		
 
 		printf("\033[A\33[2K");
 		fflush(stdout);

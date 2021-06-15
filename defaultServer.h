@@ -7,7 +7,8 @@
 //SERVER SETTINGS
 #define FULL_MEXSIZE MES_SIZE+NAME_SIZE+DATA_SIZE+PADDING+5
 #define CLIENT 5
-
+#define MODE 0//0 messaggi in ordine di ricezione(-r), 1 = messaggi in ordine di timestamp(-t invio del client)
+#define SLEEP_SECONDS 3
 //SERVER DEFAULT MESSAGES
 #define QUEUE_SIZE 20
 #define WELCOME "\033[0;36m =====Benvenuto/a nella chatroom=====\n\033[0;37m inserisci il tuo nome(max 20 caratteri):"
@@ -25,6 +26,7 @@
 #define DIR "logFile"
 #define DIR_CLIENTS  "clients"
 
+//struttura del messaggio
 struct message{
     struct client *client;
     char time[DATA_SIZE];
@@ -38,10 +40,10 @@ struct message{
 
 
 
-int returnPort(int,char*[]);
-
+//cicic
+void checkParams(int argc,char* argv[],int* port,int* mode);
 //inserisco in msg il messaggio, l'ora in infodata da clietn response
 void unpack(char* ,char* ,char* );
 FILE* folderSettings(char[],struct tm*);
-void logAndPrint( char*,char* ,char* ,char* ,FILE *,FILE*);
+void logAndFormat(char* name,char* message,char* color,char* client_response,FILE *serverLog,FILE *clientLog);
 #endif

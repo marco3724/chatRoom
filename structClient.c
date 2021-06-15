@@ -8,16 +8,12 @@ struct client root = {"root",-1,NULL,NULL,NULL};
 void sendtoAll( struct client *client,void *msg){
     char * message = (char*)msg;
     struct client *node = root.next;
+
     fprintf(stdout,"%s",message);
     //manda il messaggio a tutti i nodi
     while(node->next !=NULL){
-        //if(client ==node){
-           //  node = node->next;
-             //continue; // se node_next e' null ci sarebbe errore, quindi faccio conitnue per rifare il cpontrolllo
-       // }
-        if(send(node->socket,message ,MES_SIZE+NAME_SIZE+DATA_SIZE+PADDING+5,0)==-1)
+        if(send(node->socket,message ,FULL_MEXSIZE,0)==-1)
     		perror("messaggio non inviato");
-        
         node = node->next;
     }
 }
