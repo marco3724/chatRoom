@@ -1,23 +1,23 @@
-#include "defaultServer.h"
+#include "./headers/defaultServer.h"
 #include <stdlib.h>
 #include <sys/stat.h>
 #include <time.h>
 #include <errno.h>
 #include <string.h>
-//dsdsds
+
 void checkParams(int argc,char* argv[],int *port,int* mode){
     for(int i = 1;i<argc && i<3;i++){
-        if(argv[i][0]=='-'){
-            if(argv[i][1]=='r')
+        if(argv[i][0]=='-'){ //se inizia con - , allora indica il mode
+            if(argv[i][1]=='r')//setta mode ricezione del server
                 *mode = 0;
-            else if(argv[i][1]=='t')
+            else if(argv[i][1]=='t')//setta mode timestamp di invio
                 *mode = 1;
             else{
                 perror("parametro non valido");
                 exit(EXIT_FAILURE);
             }
         }
-         else if(argv[i][0]>='0' && argv[i][0]<='9')
+         else if(argv[i][0]>='0' && argv[i][0]<='9')//controlla se la prima cifra e' un numero
              *port = atoi(argv[i]);
     }
          
@@ -47,15 +47,16 @@ FILE* folderSettings(char filePath[],struct tm *info){
 
     char file[size];
     sprintf(file,"%s/%s",cartella,SERVER_LOGFILE_NAME);//creo il percordo del file di log del server
-    return fopen(file,"a+");//ritorno il puntatore al file di log del server
+    return fopen(file,"a");//ritorno il puntatore al file di log del server
 
 }
 
 
- void logAndFormat(char* name,char* message,char* color,char* client_response,FILE *serverLog,FILE *clientLog){
+ void logAndFormat(char* name,char* message,char* color,char* time,char* client_response,FILE *serverLog,FILE *clientLog){
     int size =NAME_SIZE+3+strlen(message)+2;
     char formattedName[NAME_SIZE+3] ;
     char finalMsg[size];
+
     //formatto il nome 
     if(strcmp(color,WHITE)==0)
         sprintf(formattedName,"[%s]:",name);//bianco vuol dire messaggio normale
@@ -65,7 +66,7 @@ FILE* folderSettings(char filePath[],struct tm *info){
     if(message[strlen(message)-1]== '\n')//formatto il messaggio
         message[strlen(message)-1] = '\0';
 
-    sprintf(finalMsg,"%s %s\n",formattedName,message);//costruisco il messaggio finale con il nome formattato e il messaggio
+    sprintf(finalMsg,"%s %s %s\n",time,formattedName,message);//costruisco il messaggio finale con il nome formattato e il messaggio
 
     if(fprintf(serverLog,"%s",finalMsg)<0)//scrittura sul file di log server
         perror("errore scrittura log file di server\n");
@@ -95,8 +96,3 @@ FILE* folderSettings(char filePath[],struct tm *info){
             msg[i-offset] = client_response[i+1];//il resto e' il messaggio dell'utente
     }           
  }
-//store
-
-//getmessage
- //LOG AND FORMAT
- //Send to all

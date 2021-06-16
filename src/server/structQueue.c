@@ -3,7 +3,7 @@
 #include <string.h>
 #include <errno.h>
 #include <stdlib.h>
-#include "structQueue.h"
+#include "./headers/structQueue.h"
 
 void merge(struct coda queue[], int l, int m, int r);
  
@@ -117,7 +117,7 @@ int min(int x, int y) {
 }
 
  
-/* Iterative mergesort function to sort arr[0...n-1] */
+
 void mergeSort(struct coda queue[])
 {
    int curr_size;  // grandezza di un sottoarray che deve fare il merge, puo andare da 1 a n/2
@@ -141,7 +141,7 @@ void mergeSort(struct coda queue[])
            //la fine della parte destra
            int right_end = min(left_start + 2*curr_size -1, n-1);
  
-           // Merge Subarrays arr[left_start...mid] & arr[mid+1...right_end]
+           // unisce i due array
            merge(queue, left_start, mid, right_end);
        }
    }

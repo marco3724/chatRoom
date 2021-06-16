@@ -1,4 +1,4 @@
-#include "defaultClient.h"	
+#include "./headers/defaultClient.h"	
 #include <stdio.h>  
 #include <sys/types.h>
 #include <sys/socket.h>
@@ -10,32 +10,39 @@
     
  void startCommunication(int client){   
     char server_response[MES_SIZE];
-	memset(server_response,0,sizeof(server_response));
-	if(recv(client,&server_response,sizeof(server_response),0)<0)
-		perror("messaggio non ricevuto");
-	printf("%s ",server_response);
+	memset(server_response,0,sizeof(server_response));//inizializzo
+
+	if(recv(client,&server_response,sizeof(server_response),0)<0){//riceve il messaggio di benvenuto dal server
+		perror("messaggio non ricevuto");//stampa l'errore su stdout
+		exit(EXIT_FAILURE);//esce
+	}
+	printf("%s ",server_response);//printa su schermo
 	fflush(stdout);
 	
 	char name[NAME_SIZE];
-	fgets(name,NAME_SIZE,stdin);
+	
+	fgets(name,NAME_SIZE,stdin);//input nome
 	
     if (name[strlen(name)-1] == '\n') //formattazione
            name[strlen(name)-1] = '\0';
-
-    if(send(client,name ,strlen(name),0)==-1)
-		 perror("messaggio non inviato");
+	
+    if(send(client,name ,strlen(name),0)==-1){//invia il nome
+		 perror("messaggio non inviato");//stampa l'errore su stdout
+		 exit(EXIT_FAILURE);//esce
+	}
+	
  }
 
 
  void pack(char* fullMsg,char*msg){
 	 
-	 struct tm* info = getCurrentTime();
-	 char dateInfo[DATA_SIZE];
-		memset(dateInfo,'\0',sizeof(dateInfo));
-		sprintf(dateInfo,"%d:%d:%d",info->tm_hour,info->tm_min,info->tm_sec);
-		int c1 =0;
-		while(dateInfo[++c1]);
-		//printf("%d %c\n",c1,dateInfo[c1]);
+	struct tm* info = getCurrentTime();//calcola il tempo corrente
+	char dateInfo[DATA_SIZE];
+	memset(dateInfo,'\0',sizeof(dateInfo));//inizializzo la data
+	sprintf(dateInfo,"%d:%d:%d",info->tm_hour,info->tm_min,info->tm_sec);//compongo la data 
 
-		sprintf(fullMsg,"%d%s%s",c1,dateInfo,msg);
+	int c1 =0; //contatore di quanti caratteri e' composto la data puo' variare da 6-9
+	while(dateInfo[++c1]);//conto
+	
+	sprintf(fullMsg,"%d%s%s",c1,dateInfo,msg);//compongo il messaggio
  }
