@@ -20,8 +20,13 @@
 	fflush(stdout);
 	
 	char name[NAME_SIZE];
+	memset(name,0,NAME_SIZE);
 	
 	fgets(name,NAME_SIZE,stdin);//input nome
+	while(strlen(name) < 2 || strlen(name) >= NAME_SIZE-1){//se non soddisfa i requisiti coninuo a ciclare
+		printf("il nome deve essere almeno lungo 1 e meno di %d\n",NAME_SIZE-1);
+		fgets(name,NAME_SIZE,stdin);
+	}
 	
     if (name[strlen(name)-1] == '\n') //formattazione
            name[strlen(name)-1] = '\0';

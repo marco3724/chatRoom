@@ -14,7 +14,7 @@
 
 //SERVER DEFAULT MESSAGES
 #define QUEUE_SIZE 20 
-#define WELCOME "\033[0;36m =====Benvenuto/a nella chatroom=====\n\033[0;37m inserisci il tuo nome(max 20 caratteri):"
+#define WELCOME "\033[0;36m =====Benvenuto/a nella chatroom=====\n\033[0;37m inserisci il tuo nome(max 19 caratteri):"
 #define EXIT_MESSAGE "ha lasciato la stanza"
 #define JOIN_MESSAGE "e' entrato/a nella stanza!!"
 #define ISTRUCTION "\033[0;36m########ISTRUZIONI#######\n\033[0;37mserver con due modalita:\n-ricezione(-r) :0 [default]\n-timestamp(-t):1\nscrivere /quit per uscire\n\033[0;36m#########################\033[0;37m\n"

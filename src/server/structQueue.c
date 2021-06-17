@@ -147,6 +147,40 @@ void mergeSort(struct coda queue[])
    }
 }
  
+//prende una data in stringa e lo inserisce nell'array
+void stroke(char* date,int d[]){
+    int j=0;//indice dell array
+    char buff[2];//buffer
+    for(int i =0;i<strlen(date);i++){
+        if(date[i+1]!=':'){//se la ora/sec/min e' formato da due caratteri allora prendine due
+            buff[0] =date[i];
+            buff[1] =date[i+1];
+            i +=2;
+            d[j++] =atoi(buff);
+        }
+        else{//senno' uno
+            buff[0] =date[i];
+            i++;
+            d[j++] =atoi(buff); 
+        }
+    }
+}
+//comparo le date sottoforma di stringhe(le transformo in interi)
+int compare(char* date1,char* date2){
+    int d1[3];//data1 
+    int d2[3];// data2
+  
+   stroke(date1,d1);//converto in interi
+   stroke(date2,d2);
+    for(int i =0;i<3;i++){//confronto
+        if(d1[i]>d2[i])
+            return 1;
+        if(d1[i]<d2[i])
+            return -1;
+    }
+    return 0;
+}
+
 
 //unisce due array : arr[l..m] e arr[m+1..r] ====> arr[]
 void merge(struct coda queue[], int l, int m, int r)
@@ -170,7 +204,8 @@ void merge(struct coda queue[], int l, int m, int r)
     j = 0;//indice del secondo array
     k = l;//indice del mio buffer (uso queue->start come offset in quanto e' una coda circolare e quindi non inizia necessariamente da l)
     while (i < n1 && j < n2){
-        if (strcmp(L[i].time, R[j].time)<=0){
+        
+        if (compare(L[i].time,R[j].time)<0){
             queue->buffer[(queue->start+k)%QUEUE_SIZE] = L[i];
             i++;
         }

@@ -35,8 +35,9 @@ void* receive(void* c){
 }
 
 int main(int argc,char* argv[]){
-	if(argc<2)
-        perror("porta non inserita!");
+	int port = PORT;//porta di deafult
+	if(argc>=2)// se c'e inserisce la porta definita dall'utente
+        port = atoi(argv[1]);
 
 	//creazione socket
 	int client = socket(AF_INET,SOCK_STREAM,0);
@@ -48,7 +49,7 @@ int main(int argc,char* argv[]){
 	//struttura al quale connettersi
 	struct sockaddr_in server_addr;
 	server_addr.sin_family = AF_INET;
-	server_addr.sin_port = htons(atoi(argv[1]));  
+	server_addr.sin_port = htons(port);  
     inet_pton(AF_INET, "127.0.0.1", &server_addr.sin_addr);
 	
 	//connessione e gestione errore
@@ -57,36 +58,40 @@ int main(int argc,char* argv[]){
 		perror("errore di connessione\n");
 		exit(EXIT_FAILURE);
 	}
-	printf("client connesso sulla porta:%d\n",atoi(argv[1]));
+	printf("client connesso sulla porta:%d\n",port);//info
 	printf("scrivere /quit per uscire\n");
 	//inizializzazione comunicazione(scambio di messaggi:benevenuto(server) e nome(client))
 	startCommunication(client);
 
 	//thread che gestisce la ricezione	 	
 	pthread_t tid;
-    pthread_create(&tid,NULL,receive,&client);
-
-
+    if(pthread_create(&tid,NULL,receive,&client)!=0){
+            perror("errore nel creare il thread");
+            exit(EXIT_FAILURE);
+	}
     //invio
 	char msg[MES_SIZE];//messaggio puro
 	char fullMsg[MES_SIZE+DATA_SIZE+PADDING];//messaggio con data e bit che rappresenta il numero di caratteri di data
 	while(1){
 		memset(fullMsg,0,MES_SIZE+DATA_SIZE+PADDING);//inizializzo il messaggio
-
+		memset(msg,0,MES_SIZE);
 		//formatto per bellezza
 		printf("\r%s", "(io): ");
     	fflush(stdout);
-	  	
+	
 		//input
     	fgets(msg,MES_SIZE,stdin);
-		
+
 		//cancella l'ultima riga di quello che ho scritto
 		printf("\033[A\33[2K");
 		fflush(stdout);
 
+
+
 		//uscire dalla chatroom con il comando /quit
 		if(strcmp(msg,"/quit\n")==0)
 			break;
+		
 		//impacchetto il messaggio
 		pack(fullMsg,msg);
 		//invio il messaggio completo

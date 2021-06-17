@@ -30,17 +30,22 @@ FILE* folderSettings(char filePath[],struct tm *info){
     char cartella[strlen(DIR)+15];
     sprintf(cartella,"./%s/%d-%d-%d",DIR,info->tm_year-100,info->tm_mon+1,info->tm_mday);//creo il percorso per i file di log del giorno corrente
 
-    if(mkdir(DIR,S_IRWXU | S_IRWXG)==-1 && errno!=EEXIST)//creo la cartella del giorno per i log
+    if(mkdir(DIR,S_IRWXU | S_IRWXG)==-1 && errno!=EEXIST){//creo la cartella del giorno per i log
         perror("errore creazione cartella");
+        exit(EXIT_FAILURE);
+    }
 
-    if(mkdir(cartella,S_IRWXU | S_IRWXG)==-1 && errno!=EEXIST)//crea la cartella
+    if(mkdir(cartella,S_IRWXU | S_IRWXG)==-1 && errno!=EEXIST){//crea la cartella
         perror("errore creazione cartella");
+        exit(EXIT_FAILURE);
+    }
 
-       
     sprintf(filePath,"%s/%s",cartella,DIR_CLIENTS);//crea il percorso della cartella dei clients
    
-    if(mkdir(filePath,S_IRWXU | S_IRWXG)==-1 && errno!=EEXIST)//crea la cartella dei clients
+    if(mkdir(filePath,S_IRWXU | S_IRWXG)==-1 && errno!=EEXIST){//crea la cartella dei clients
         perror("errore creazione cartella");
+        exit(EXIT_FAILURE);
+    }
     
     //size del nome del file di log del server (cartellaprincipale/data(10)/server.txt)
     int size = strlen(DIR) +strlen(SERVER_LOGFILE_NAME) +15;

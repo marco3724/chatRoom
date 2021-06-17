@@ -100,6 +100,7 @@ int main(int argc, char* argv[]){
 
     //accettazione connessioni
     while(1){
+       
         struct client *client = malloc(sizeof(struct client));//alloco memoria per il nuovo client
         
         //aggiunge il client appena creato alla catena e setta node = client (come ultimo nodo della catena)
@@ -112,13 +113,16 @@ int main(int argc, char* argv[]){
 	    client->socket = accept(server,NULL,NULL);
         if(client->socket==-1)
             perror("accettazione socket client fallito");
-
+       
         if(send(client->socket,WELCOME,sizeof(WELCOME),0)==-1)    //messaggio di benevenuto
             perror("messaggio non inviato");
 
         //thread per la gestione delle ricezione dei client
         pthread_t receiveTid;
-        pthread_create(&receiveTid,NULL,receive,client);
+        if(pthread_create(&receiveTid,NULL,receive,client)!=0){
+            perror("errore nel creare il thread");
+            exit(EXIT_FAILURE);
+        }
     }
 
     //non arrivera' mai qui
@@ -218,19 +222,26 @@ void* commands(void *n){
 void* broadcast(void *n){
     struct message *msg;
     char fullMsg[FULL_MEXSIZE];
-    struct tm* info = getCurrentTime();
-    int sec1 = info->tm_sec;
+    time_t info;
+    time(&info);
+    time_t sec1 = info;
     while(1){
        
-        if(mode==1 && info->tm_sec-sec1>=SEND_SECONDS+SLEEP_SECONDS) {// se -t (1), ha SEND_SECONDS secondi per inviare i messaaggi
+        if(mode==1 && info-sec1>=SEND_SECONDS+SLEEP_SECONDS) {// se -t (1), ha SEND_SECONDS secondi per inviare i messaaggi
+            printf("\raccumulo messaggi\n");//print di accumulo
             sleep(SLEEP_SECONDS);//accumula per SLEEP_SECONDS(3) secondi i messaggi
             sort(queue);//ordino al coda
-            sec1 = info->tm_sec; //aggiorno il tempo
+            sec1 = info; //aggiorno il tempo
+           
         }
         msg = getMessage(queue);//restituisce un messaggio
-        info = getCurrentTime();//aggiorno il tempo
+        time(&info);//aggiorno il tempo
+        if(strcmp("",msg->client->name)==0){//vuol dire che il client si e' disconnesso
+            printf("messaggio non inviato perche appartiene ad un client disconeesso\n");
+            continue;
+        }
         pthread_mutex_lock(&mutexLog);//lock per scrivere su file e invio di messaggi a tutta la catena di client
-        
+         
         logAndFormat(msg->client->name,msg->txt,msg->color,msg->time,fullMsg,serverLog,msg->client->log);
         sendtoAll(msg->client,fullMsg);
         pthread_mutex_unlock(&mutexLog);
