@@ -47,7 +47,7 @@ int main(int argc, char* argv[]){
     //tempo e inzializzazione file di log
     struct tm *info = getCurrentTime();
 
-    //crea 2 cartelle : la cartella logFile e all interno un altra cartella client e restituisce il puntatore al file di log del server
+    //crea 3 cartelle : la cartella logFile e all interno un altra cartella client e restituisce il puntatore al file di log del server
     serverLog = folderSettings(filePath,info);
     if(serverLog==NULL){
         perror("file non aperto/creato");
@@ -113,7 +113,7 @@ int main(int argc, char* argv[]){
 	    client->socket = accept(server,NULL,NULL);
         if(client->socket==-1)
             perror("accettazione socket client fallito");
-       
+        
         if(send(client->socket,WELCOME,sizeof(WELCOME),0)==-1)    //messaggio di benevenuto
             perror("messaggio non inviato");
 
@@ -211,9 +211,9 @@ void* commands(void *n){
     struct client* node=root.next;
     struct client* node1;
     while(node!=NULL){
-         close(node->socket); // close all socket include server_sockfd
+        close(node->socket); // close all socket include server_sockfd
         node1 = node;
-       node =node->next;
+        node =node->next;
         free(node1);
     }
     free(node);
