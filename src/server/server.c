@@ -208,7 +208,16 @@ void* commands(void *n){
     stringifyCurrentTime(time);
     fprintf(serverLog,"%s fine sessione\n",time);
     pthread_mutex_unlock(&mutexLog);
-
+    struct client* node=root.next;
+    struct client* node1;
+    while(node!=NULL){
+         close(node->socket); // close all socket include server_sockfd
+        node1 = node;
+       node =node->next;
+        free(node1);
+    }
+    free(node);
+   
     //routine di chiusura
     fclose(serverLog);
     pthread_mutex_destroy(&mutexLog); 
@@ -259,6 +268,14 @@ void handler(){
     //routine di chiusura
     fclose(serverLog);
     pthread_mutex_destroy(&mutexLog); 
+    struct client* node=root.next;
+    struct client* node1;
+    while(node!=NULL){
+        close(node->socket); // close all socket include server_sockfd
+        node1 = node;
+        node =node->next;
+        free(node1);
+    }
     free(queue);
     printf("\nserver chiuso mediante segnale ctrl+c\n");
     exit(EXIT_SUCCESS);
